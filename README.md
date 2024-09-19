@@ -4,17 +4,21 @@ Set up EC2 Instances:
 In the AWS Management Console search bar at the top, type "EC2" and select EC2.
 Select Amazon Linux 2 AMI or another suitable AMI for your app.
 Select t2.micro (Free Tier eligible).
+
 Network Settings:
  Select your VPC created earlier, and choose a private subnet.
 Auto-assign Public IP: Disable this setting, as the instance is in a private subnet.
 Key Pair: Choose an existing key pair or create a new one.
+
 Set Up Auto-Scaling Group (ASG):
 In the EC2 Dashboard, scroll down to Auto Scaling Groups.
 Click Create Auto Scaling Group.
 Configure your ASG by naming your group and choose a Launch Template. If you haven’t created a Launch Template yet:
+
 Create a Launch Template specifying the instance type (eg, choose the Amazon Linux 2 AMI, t2.micro), and select the security group and key pair.
 VPC and Subnet: Select your VPC and choose private subnets configured earlier across two or more Availability Zones (AZs).
 If you already have an ASG: Select your existing Auto Scaling Group, click Actions, and choose Edit to modify the scaling policies.
+
 Set Target Tracking Scaling Policy:
 In the Scaling Policies section:
 Select Target tracking scaling policy.
@@ -27,32 +31,38 @@ Set an appropriate cooldown period (e.g., 300 seconds) to ensure that the scalin
            Click Save
 
 
+
 Set up Application Load Balancer (ALB):
 In the search bar, type "EC2" and click on EC2 under Services.
 On the left menu, under Load Balancing, click Load Balancers.
 On the Load Balancers page, click Create Load Balancer.
+
 Choose Load Balancer Type:
 Select Application Load Balancer for HTTP/HTTPS traffic.
 Configure Basic Settings:
 Name: Give your ALB a meaningful name (e.g., dating-website-alb).
 Scheme: Set it to Internet-facing to allow access from the internet.
 IP Address Type: Choose IPv4 (or Dualstack if using both IPv4 and IPv6).
+
 Configure Network Settings
 VPC: Select the VPC where your EC2 instances are running.
 Availability Zones:
 Select the public subnets for each Availability Zones.
 Subnet Configuration:
  Choose Public Subnets (in different AZs) to allow traffic from the internet.
+
 Create Target Group: to route traffic to your EC2 instances in the private subnet.
 Choose Instance as the target type (since you want to route traffic to EC2 instances).
 VPC: Select the same VPC where your EC2 instances are located.
 Health Check Protocol: Set the Health Check Protocol to HTTP or TCP depending on your application's configuration.
 For HTTP, set the Health Check Path to something like /health if your application exposes a health check endpoint.
+
 Other Health Check Settings: Configure the Healthy Threshold (e.g., 3 successful checks) and Unhealthy Threshold (e.g., 2 failed checks) 
 Set Health Check Interval (e.g., 30 seconds) 
 Register EC2 Instances with Target Group
 Select the EC2 instances in the private subnets from the list.
 Click Include as Pending Below, then click Register Targets.
+
 Review all of your configurations:
 Ensure the ALB is placed in public subnets and will distribute traffic to EC2 instances in private subnets via the Target Group.
 Click Create Load Balancer.
@@ -64,12 +74,16 @@ If instances are marked as unhealthy, verify that your health check configuratio
 Add Listener Rules for Specific Traffic (optional):
 You can add Listener Rules to forward certain types of traffic:
 eg, forward requests for /api/* to EC2 instances (dynamic content), while routing static content requests to CloudFront
+
+
 Set Up ElastiCache for Session Management (Redis)
 In the search bar of the AWS Management Console, type “ElastiCache” and click on ElastiCache under Services.
 Create a Redis Cluster
 Click “Create” in the ElastiCache dashboard.
 Select Redis under the Cluster Engine.
 Name your cluster (e.g., redis-cluster).
+
+
 Configure Redis Cluster
 Cluster Mode: Choose Cluster Mode Disabled (if you're using a simple Redis setup) or Cluster Mode Enabled (for advanced, distributed Redis clusters).
 Node Type: Choose a node type (e.g., cache.t2.micro for development and testing, or a larger instance for production).
@@ -80,6 +94,8 @@ Multi-AZ: Enable Multi-AZ with Automatic Failover to ensure that if the primary 
 VPC and Subnet Group:
 Select the VPC where your EC2 instances are running.
 Choose or create a Subnet Group that spans multiple AZs to ensure high availability.
+
+
 Configure Security Settings
 Security Group: Choose or create a security group that allows inbound traffic from your EC2 instances (the ones that need to communicate with Redis).
 Encryption:
@@ -87,15 +103,18 @@ Enable in-transit encryption and at-rest encryption to secure your data.
 Set authentication if needed (enforce Redis AUTH for more security).
 Finalize and Launch
 
+
 Set Up Session Management on EC2
 In the ElastiCache dashboard, locate your Redis cluster.
 Click on your Redis cluster to open its details.
 Find the Redis Endpoint:
 In the Cluster Details section, locate the Primary Endpoint URL to connect to the Redis cluster.
+
 Modify Your Application on EC2 to use Redis:
 SSH into your EC2 instance where your web application is running
 ssh -i /path/to/keypair.pem ec2-user@ec2-instance-public-ip
 In the application code, add the Redis connection configuration, and use the Redis cluster's endpoint URL (provided in the ElastiCache dashboard) to connect to Redis.
+
 Example for a Node.js app using Redis:
 const redis = require('redis');
 const client = redis.createClient({
@@ -114,22 +133,31 @@ client.get('sessionID', (err, reply) => {
 Install Redis Libraries:
            If your application doesn’t have Redis libraries installed, install them. For Node.js, you can install it like this:
             npm install redis
+
+
 Test the Setup:
 Deploy your application on your EC2 instances and confirm that session data is stored in Redis by testing the functionality of your web application.
 Verify that session data is persistent even when traffic is distributed across different EC2 instances via the load balancer.
+
 On the EC2 instance, use the Redis CLI to check the stored session data:
 redis-cli -h <your-redis-endpoint-url> -p 6379
                               Use the get command to check if session data is stored:
                                    get sessionID
+
+
 Set Up CloudFront (Content Delivery Network)
 In the search bar of AWS Management Console, type “CloudFront” and click on CloudFront under Services.
 On the CloudFront dashboard, click Create Distribution.
 Choose Web Distribution for your static content (e.g., images, CSS, and JavaScript files).
+
+
 Configure Origin Settings (S3 Integration)
 Origin Domain Name:
 Select your S3 bucket where your static files (e.g., profile images, CSS, JavaScript) are stored.
 If your S3 bucket is not public, configure S3 bucket policies to allow CloudFront to access the content through:
 Origin Access Identity (OAI) to securely access the private content in your S3 bucket.
+
+
 Create or Modify the S3 Bucket Policy:
 Below is an example policy to allow CloudFront to read objects from the S3 bucket:
 {
@@ -147,21 +175,26 @@ Below is an example policy to allow CloudFront to read objects from the S3 bucke
 }
 Replace OAI_ID with your CloudFront OAI ID.
 Replace your-bucket-name with your actual S3 bucket name.
+
 Origin Path: Specify the folder (if applicable) within the S3 bucket where your static assets are stored (e.g., /static).
 Restrict Bucket Access: Enable Restrict Bucket Access if you want to serve files only through CloudFront, not directly from S3.
+
 Configure Default Cache Behavior
 Viewer Protocol Policy:
 Set this to Redirect HTTP to HTTPS to ensure secure connections.
 Allowed HTTP Methods: Choose GET, HEAD (for serving static content).
 Object Caching: Set caching behavior. You can use origin cache headers or customize the TTL (Time-to-Live) for cached objects.
+
 Configure Distribution Settings
 Price Class: Choose a Price Class based on the geographical locations where you expect most traffic. For global access, choose Use All Edge Locations.
 SSL Certificate:
 If you have an SSL certificate, choose Custom SSL Certificate and configure it.
 If not, use the default CloudFront certificate (for https://domain.cloudfront.net).
+
 Create the Distribution
 Review the settings and click Create Distribution. It may take a few minutes for the distribution to be deployed.
 Once deployed, CloudFront will begin caching and serving content from the edge locations closest to users.
+
 Route Static Content Requests via CloudFront
 Update Your DNS (Route 53):
 In Route 53, create a CNAME record (e.g., static.yourwebsite.com) that points to the CloudFront distribution's domain name (e.g., abc123.cloudfront.net).
