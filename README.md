@@ -75,14 +75,13 @@ Create a Lambda Function:
 •	Select Node.js, Python or preferred language.
 •	Choose an existing role or create a new one with S3 and CloudWatch permissions.
 Write the Lambda Function: The function will resize or optimize images after being uploaded to S3. Here's Node.js that uses the sharp library to resize an image:
+
 const AWS = require('aws-sdk');
 const S3 = new AWS.S3();
 const Sharp = require('sharp');
-
 exports.handler = async (event) => {
     const bucket = event.Records[0].s3.bucket.name;
     const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
-    
     try {
         // Get the uploaded image from S3
         const image = await S3.getObject({ Bucket: bucket, Key: key }).promise();
@@ -112,6 +111,8 @@ exports.handler = async (event) => {
         };
     }
 };
+
+
 3. Set Up the S3 Event Trigger
 Configure S3 to trigger the Lambda function when a new image is uploaded:
 •	Go to your S3 bucket in the AWS Management Console.
