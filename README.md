@@ -1,70 +1,69 @@
 VPC, Networking, and Security
 Objective: Set up the networking layer, including VPC, subnets, security groups, and IAM roles.
 Step-by-Step Guide:
-Create a VPC: (or use the Default VPC)
-Go to the VPC Dashboard in the AWS Management Console.
-Click Create VPC.
-Choose VPC with a Single Public Subnet to keep it simple.
-Set CIDR Block to 10.0.0.0/16 and name VPC (e.g., "DatingSite-VPC").
-Enable DNS Hostnames so your EC2 instances can resolve DNS names.
-Click Create VPC.
-Create Public and Private Subnets:
-In the VPC Dashboard, go to Subnets > Create Subnet.
-Select your VPC (e.g., "DatingSite-VPC").
-Create two public subnets:
-PublicSubnetA (10.0.0.0/24 in Availability Zone A).
-PublicSubnetB (10.0.1.0/24 in Availability Zone B).
-Select the public subnet (both public subnets), click “action” and select “edit subnet settings”. Then check the box for “Enable auto-assign public IPv4 address.
-Create two private subnets:
-PrivateSubnetA (10.0.16.0/20 in Availability Zone A).
-Private Subnet 2 (10.0.32.0/24 in Availability Zone B).
-Attach an Internet Gateway:
-Go to the VPC Dashboard > Internet Gateways > Create Internet Gateway.
-Name it ("DatingSite-IGW") and click Create.
-After creation, attach the gateway to your VPC (DatingSite-VPC).
-Route Tables Configuration:
-Go to Route Tables > Create Route Table.
-Create a Public Route Table:
-Name it ("Public-RT").
-Associate the public subnets.
-Edit the routes and add a route for all outbound traffic (0.0.0.0/0) pointing to the Internet Gateway.
-Create a Private Route Table:
-Name it (e.g., "Private-RT").
-Associate the private subnets.
-NAT Gateway:
-In the VPC Dashboard, go to NAT Gateways > Create NAT Gateway.
-Place the NAT Gateway in one of the public subnets.
-Associate the Private Route Table with the NAT Gateway for outbound internet traffic.
-Security Groups:
-Go to EC2 Dashboard > Security Groups > Create Security Group.
-ELB Security Group:
-Allow inbound traffic on ports 80/443 from the internet.
-EC2 Security Group:
-Allow inbound traffic on port 80 (HTTP) and 443 (HTTPS) from the ELB Security Group.
-Allow outbound traffic to RDS on port 3306 (MySQL) and Elasticache (port 6379).
-RDS Security Group:
-Allow traffic from EC2 instances and Bastion Host on port 3306.
- Bastion Host Security Group:
-Allow SSH (port 22) from your IP.
-Allow traffic to RDS instances in the private subnet on port 3306.
-Elasticache Security Group:
-Allow inbound traffic from EC2 instances.
-  Create a Bastion Host:
-Launch an EC2 Instance in a PublicSubnetA using the Amazon Linux 2 AMI.
-Choose t2.micro for cost-effectiveness (Free Tier eligible).
-Attach a Security Group that allows SSH access (port 22) from your IP only (for secure access).
-Attach an Elastic IP to the Bastion Host, so you can connect to it consistently.
-The Bastion Host allows you to connect securely to RDS and EC2 instances in the private subnets.
-IAM Role Setup:
-Go to the IAM Dashboard > Roles > Create Role.
-EC2 Role:
-Choose AWS service and select EC2.
-Attach AmazonS3ReadOnlyAccess policy to allow EC2 instances access to S3.
-Name the role ( "EC2-S3Access-Role").
-Lambda Role:
-Choose AWS service and select Lambda.
-Attach policies like AmazonRDSFullAccess and AWSLambdaExecute.
-
+1. Create a VPC: (or use the Default VPC)
+   * Go to the VPC Dashboard in the AWS Management Console.
+   * Click Create VPC.
+   * Choose VPC with a Single Public Subnet to keep it simple.
+   * Set CIDR Block to 10.0.0.0/16 and name VPC (e.g., "DatingSite-VPC").
+   * Enable DNS Hostnames so your EC2 instances can resolve DNS names.
+   * Click Create VPC.
+2. Create Public and Private Subnets:
+   * In the VPC Dashboard, go to Subnets > Create Subnet.
+   * Select your VPC (e.g., "DatingSite-VPC").
+   * Create two public subnets:
+      * PublicSubnetA (10.0.0.0/24 in Availability Zone A).
+      * PublicSubnetB (10.0.1.0/24 in Availability Zone B).
+   * Select the public subnet (both public subnets), click “action” and select “edit subnet settings”. Then check the box for “Enable auto-assign public IPv4 address.
+   * Create two private subnets:
+      * PrivateSubnetA (10.0.16.0/20 in Availability Zone A).
+      * Private Subnet 2 (10.0.32.0/24 in Availability Zone B).
+3. Attach an Internet Gateway:
+   * Go to the VPC Dashboard > Internet Gateways > Create Internet Gateway.
+   * Name it ("DatingSite-IGW") and click Create.
+   * After creation, attach the gateway to your VPC (DatingSite-VPC).
+4. Route Tables Configuration:
+   * Go to Route Tables > Create Route Table.
+   * Create a Public Route Table:
+      * Name it ("Public-RT").
+      * Associate the public subnets.
+      * Edit the routes and add a route for all outbound traffic (0.0.0.0/0) pointing to the Internet Gateway.
+   * Create a Private Route Table:
+      * Name it (e.g., "Private-RT").
+      * Associate the private subnets.
+5. NAT Gateway:
+   * In the VPC Dashboard, go to NAT Gateways > Create NAT Gateway.
+   * Place the NAT Gateway in one of the public subnets.
+   * Associate the Private Route Table with the NAT Gateway for outbound internet traffic.
+6. Security Groups:
+   * Go to EC2 Dashboard > Security Groups > Create Security Group.
+   * ELB Security Group:
+      * Allow inbound traffic on ports 80/443 from the internet.
+   * EC2 Security Group:
+      * Allow inbound traffic on port 80 (HTTP) and 443 (HTTPS) from the ELB Security Group.
+      * Allow outbound traffic to RDS on port 3306 (MySQL) and Elasticache (port 6379).
+   * RDS Security Group:
+      * Allow traffic from EC2 instances and Bastion Host on port 3306.
+   *  Bastion Host Security Group:
+      * Allow SSH (port 22) from your IP.
+      * Allow traffic to RDS instances in the private subnet on port 3306.
+   * Elasticache Security Group:
+      * Allow inbound traffic from EC2 instances.
+7.   Create a Bastion Host:
+   * Launch an EC2 Instance in a PublicSubnetA using the Amazon Linux 2 AMI.
+   * Choose t2.micro for cost-effectiveness (Free Tier eligible).
+   * Attach a Security Group that allows SSH access (port 22) from your IP only (for secure access).
+   * Attach an Elastic IP to the Bastion Host, so you can connect to it consistently.
+   * The Bastion Host allows you to connect securely to RDS and EC2 instances in the private subnets.
+8. IAM Role Setup:
+   * Go to the IAM Dashboard > Roles > Create Role.
+   * EC2 Role:
+      * Choose AWS service and select EC2.
+      * Attach AmazonS3ReadOnlyAccess policy to allow EC2 instances access to S3.
+      * Name the role ( "EC2-S3Access-Role").
+   * Lambda Role:
+      * Choose AWS service and select Lambda.
+      * Attach policies like AmazonRDSFullAccess and AWSLambdaExecute.
 
 Step-by-step guide to set up EC2 Instances, Auto-Scaling, and an Application Load Balancer (ALB)
 
