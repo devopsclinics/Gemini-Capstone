@@ -347,12 +347,12 @@ Create a Lambda Function:
 •	Choose an existing role or create a new one with S3 and CloudWatch permissions.
 Write the Lambda Function: The function will resize or optimize images after being uploaded to S3. Here's Node.js that uses the sharp library to resize an image:
 
-const AWS = require('aws-sdk');
-const S3 = new AWS.S3();
-const Sharp = require('sharp');
-exports.handler = async (event) => {
-    const bucket = event.Records[0].s3.bucket.name;
-    const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
+	const AWS = require('aws-sdk');
+	const S3 = new AWS.S3();
+	const Sharp = require('sharp');
+	exports.handler = async (event) => {
+    	const bucket = event.Records[0].s3.bucket.name;
+    	const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
     try {
         // Get the uploaded image from S3
         const image = await S3.getObject({ Bucket: bucket, Key: key }).promise();
@@ -379,9 +379,9 @@ exports.handler = async (event) => {
         return {
             statusCode: 500,
             body: JSON.stringify('Error processing image.'),
-        };
-    }
-};
+          };
+    	}
+    };
 
 
 3. Set Up the S3 Event Trigger
@@ -415,10 +415,11 @@ Choose Author from scratch and provide a function name (e.g., SendUserAlert).
 Choose a runtime such as Node.js, Python, or any preferred language.
 Choose or create an execution role that has permissions for SNS Publish and CloudWatch Logs.
 Write the Lambda Function:
-const AWS = require('aws-sdk');
-const sns = new AWS.SNS();
+	
+	const AWS = require('aws-sdk');
+	const sns = new AWS.SNS();
 
-exports.handler = async (event) => {
+	exports.handler = async (event) => {
     const params = {
         Message: `Hello, user! Your status is now: ${event.statusUpdate}`, // Customize the message
         TopicArn: 'arn:aws:sns:region:account-id:UserAlertsTopic'  // Replace with your SNS topic ARN
@@ -438,8 +439,8 @@ exports.handler = async (event) => {
             statusCode: 500,
             body: JSON.stringify('Failed to send notification'),
         };
-    }
-};
+       }
+    };
 NOTE: Message: Customize the message to include any dynamic data, such as a user’s name, profile status, or system event.
 TopicArn: Replace this with your actual SNS Topic ARN.
 2. Set Up Lambda Triggers
@@ -577,10 +578,10 @@ SNS Setup for Event-Based Notifications:
 1.	Lambda Function to Publish SNS Messages:
 •	You can use AWS Lambda to trigger SNS messages whenever specific application events occur. For example, when a new match is found, or a user gets a message, invoke Lambda to publish an SNS message.
 Node.js Lambda function to send an SNS notification for a new match:
-const AWS = require('aws-sdk');
-const sns = new AWS.SNS();
+	const AWS = require('aws-sdk');
+	const sns = new AWS.SNS();
 
-exports.handler = async (event) => {
+	exports.handler = async (event) => {
     const params = {
         Message: `Congrats! You've got a new match with ${event.matchName}!`,
         TopicArn: 'arn:aws:sns:region:account-id:UserNotificationTopic'
@@ -593,8 +594,8 @@ exports.handler = async (event) => {
     } catch (error) {
         console.error('Error sending message:', error);
         return { statusCode: 500, body: 'Failed to send notification.' };
-    }
-};
+     }
+    };
 2.	CloudWatch Alarms for Downtime Alerts:
 Set up CloudWatch alarms to monitor critical resources (EC2, RDS, Lambda, etc.).
 When a failure or downtime is detected (e.g., CPU utilization spike, failed status checks), the CloudWatch alarm triggers SNS to notify administrators.
